@@ -1,2 +1,6 @@
-let a = 1;
-print(a + "bc")
+let sumOne = fn (n) => {
+  n + 1
+};
+
+let c = 10;
+print(sumOne(2) + sumOne(sumOne(2)) + c)

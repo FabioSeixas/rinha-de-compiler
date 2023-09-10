@@ -1,50 +1,61 @@
 use clap::Parser;
 use miette::IntoDiagnostic;
-use rinha::{ast, Command, parser};
+use rinha::{ast, parser, Command};
 use std::{collections, fs};
 
 fn main() {
     let command = Command::parse();
     let file = fs::read_to_string(&command.main).into_diagnostic().unwrap();
     let ast: ast::File = serde_json::from_str(&file).unwrap();
-    // println!("{:?}", ast.expression);
 
     let mut interpreter = Interpreter::new();
 
-    interpreter.visit(ast.expression);
+    let mut global_scope = collections::HashMap::new();
+    interpreter.interpret(ast.expression, &mut global_scope);
 }
+
 #[derive(Debug, Clone)]
 enum Primitive {
     Str(String),
     Int(i32),
     Bool(bool),
     Var((String, Box<Primitive>)),
+    Function {
+        parameters: Vec<String>,
+        value: ast::Term,
+    },
     None,
 }
 
-struct Interpreter {
-    terms_map: collections::HashMap<String, Primitive>,
-}
+type Scope = collections::HashMap<String, Primitive>;
+
+struct Interpreter {}
 
 impl Interpreter {
     fn new() -> Interpreter {
-        Interpreter { terms_map: collections::HashMap::new() }
+        Interpreter { }
     }
-    fn visit(&mut self, term: ast::Term) -> Primitive {
+    fn interpret(&mut self, ast: ast::Term, scope: &mut Scope) {
+        self.visit(ast, scope);
+    }
+    fn visit(&mut self, term: ast::Term, scope: &mut Scope) -> Primitive {
         match term {
-            ast::Term::Int(v) => self.visit_int(v),
-            ast::Term::Str(v) => self.visit_str(v),
-            ast::Term::Bool(v) => self.visit_bool(v),
-            ast::Term::Binary(v) => self.visit_bin_op(v),
-            ast::Term::Let(v) => self.visit_let(v),
-            ast::Term::Var(v) => self.visit_var(v),
-            ast::Term::Print(v) => self.visit_print(v),
+            ast::Term::Int(v) => self.visit_int(v, scope),
+            ast::Term::Str(v) => self.visit_str(v, scope),
+            ast::Term::Bool(v) => self.visit_bool(v, scope),
+            ast::Term::Binary(v) => self.visit_bin_op(v, scope),
+            ast::Term::Let(v) => self.visit_let(v, scope),
+            ast::Term::Var(v) => self.visit_var(v, scope),
+            ast::Term::Print(v) => self.visit_print(v, scope),
+            ast::Term::Function(v) => self.visit_function(v, scope),
+            ast::Term::Call(v) => self.visit_call(v, scope),
+            ast::Term::If(v) => self.visit_conditional(v, scope),
             _ => Primitive::None,
         }
     }
-    fn visit_bin_op(&mut self, binary: ast::Binary) -> Primitive {
-        let left = self.visit(*binary.lhs);
-        let right = self.visit(*binary.rhs);
+    fn visit_bin_op(&mut self, binary: ast::Binary, scope: &mut Scope) -> Primitive {
+        let left = self.visit(*binary.lhs, scope);
+        let right = self.visit(*binary.rhs, scope);
         match binary.op {
             ast::BinaryOp::Add => add_two_primitives(left, right),
             ast::BinaryOp::Sub => sub_two_primitives(left, right),
@@ -62,32 +73,62 @@ impl Interpreter {
             _ => Primitive::None,
         }
     }
-    fn visit_let(&mut self, let_param: ast::Let) -> Primitive {
-        let var_value = self.visit(*let_param.value);
-        println!("var value: {:?}", var_value);
-        self.terms_map.insert(let_param.name.text, var_value);
-        println!("hash map: {:?}", self.terms_map);
-        self.visit(*let_param.next)
+    fn visit_let(&mut self, let_param: ast::Let, scope: &mut Scope) -> Primitive {
+        let var_value = self.visit(*let_param.value, scope);
+        scope.insert(let_param.name.text, var_value);
+        self.visit(*let_param.next, scope)
     }
-    fn visit_var(&mut self, var: parser::Var) -> Primitive {
-        let var_stored_opt = self.terms_map.get(&var.text);
+    fn visit_var(&mut self, var: parser::Var, scope: &Scope) -> Primitive {
+        let var_stored_opt = scope.get(&var.text);
         if let Some(var_stored) = var_stored_opt {
             var_stored.clone()
         } else {
             Primitive::None
         }
     }
-    fn visit_int(&self, int: ast::Int) -> Primitive {
+    fn visit_function(&mut self, func: ast::Function, scope: &Scope) -> Primitive {
+        let mut parameters: Vec<String> = Vec::new();
+        for param in func.parameters {
+            parameters.push(param.text);
+        }
+        Primitive::Function {
+            value: *func.value,
+            parameters,
+        }
+    }
+    fn visit_call(&mut self, call: ast::Call, scope: &mut Scope) -> Primitive {
+        let function = self.visit(*call.callee, scope);
+        if let Primitive::Function { parameters, value } = function {
+            let mut local_scope: Scope = scope.clone();
+            for (name, param_value) in parameters.into_iter().zip(call.arguments) {
+                let evaluated_param_value = self.visit(param_value, scope);
+                local_scope.insert(name, evaluated_param_value);
+            }
+            return self.visit(value, &mut local_scope);
+        }
+        Primitive::None
+    }
+    fn visit_conditional(&mut self, conditional: ast::If, scope: &mut Scope) -> Primitive {
+        if let Primitive::Bool(condition_result) = self.visit(*conditional.condition, scope) {
+            if condition_result {
+                return self.visit(*conditional.then, scope)
+            } else {
+                return self.visit(*conditional.otherwise, scope)
+            }
+        }
+        Primitive::None
+    }
+    fn visit_int(&self, int: ast::Int, scope: &Scope) -> Primitive {
         Primitive::Int(int.value)
     }
-    fn visit_bool(&self, bool: ast::Bool) -> Primitive {
+    fn visit_bool(&self, bool: ast::Bool, scope: &Scope) -> Primitive {
         Primitive::Bool(bool.value)
     }
-    fn visit_str(&self, str: ast::Str) -> Primitive {
+    fn visit_str(&self, str: ast::Str, scope: &Scope) -> Primitive {
         Primitive::Str(str.value)
     }
-    fn visit_print(&mut self, print: ast::Print) -> Primitive {
-        let result = self.visit(*print.value);
+    fn visit_print(&mut self, print: ast::Print, scope: &mut Scope) -> Primitive {
+        let result = self.visit(*print.value, scope);
         match result {
             Primitive::Str(v) => println!("{v}"),
             Primitive::Int(v) => println!("{v}"),
@@ -99,8 +140,6 @@ impl Interpreter {
 }
 
 fn add_two_primitives(p1: Primitive, p2: Primitive) -> Primitive {
-    println!("p1: {:?}", p1);
-    println!("p2: {:?}", p2);
     match p1 {
         Primitive::Int(p1_int) => match p2 {
             Primitive::Int(p2_int) => Primitive::Int(p1_int + p2_int),
@@ -110,10 +149,9 @@ fn add_two_primitives(p1: Primitive, p2: Primitive) -> Primitive {
                 Primitive::Str(result)
             }
             Primitive::Var(p2_var) => {
-                println!("p2_var: {:?}", p2_var);
                 add_two_primitives(p1, *p2_var.1)
             }
-           _ => Primitive::None,
+            _ => Primitive::None,
         },
         Primitive::Str(p1_str) => match p2 {
             Primitive::Int(p2_int) => {
@@ -133,162 +171,137 @@ fn add_two_primitives(p1: Primitive, p2: Primitive) -> Primitive {
 }
 
 fn sub_two_primitives(p1: Primitive, p2: Primitive) -> Primitive {
-    println!("p1: {:?}", p1);
-    println!("p2: {:?}", p2);
     match p1 {
         Primitive::Int(p1_int) => match p2 {
             Primitive::Int(p2_int) => Primitive::Int(p1_int - p2_int),
-            _ => Primitive::None
+            _ => Primitive::None,
         },
         _ => Primitive::None,
     }
 }
 
 fn mul_two_primitives(p1: Primitive, p2: Primitive) -> Primitive {
-    println!("p1: {:?}", p1);
-    println!("p2: {:?}", p2);
     match p1 {
         Primitive::Int(p1_int) => match p2 {
             Primitive::Int(p2_int) => Primitive::Int(p1_int * p2_int),
-            _ => Primitive::None
+            _ => Primitive::None,
         },
         _ => Primitive::None,
     }
 }
 
 fn div_two_primitives(p1: Primitive, p2: Primitive) -> Primitive {
-    println!("p1: {:?}", p1);
-    println!("p2: {:?}", p2);
     match p1 {
         Primitive::Int(p1_int) => match p2 {
             Primitive::Int(p2_int) => Primitive::Int(p1_int / p2_int),
-            _ => Primitive::None
+            _ => Primitive::None,
         },
         _ => Primitive::None,
     }
 }
 
 fn rem_two_primitives(p1: Primitive, p2: Primitive) -> Primitive {
-    println!("p1: {:?}", p1);
-    println!("p2: {:?}", p2);
     match p1 {
         Primitive::Int(p1_int) => match p2 {
             Primitive::Int(p2_int) => Primitive::Int(p1_int % p2_int),
-            _ => Primitive::None
+            _ => Primitive::None,
         },
         _ => Primitive::None,
     }
 }
 
 fn eq_two_primitives(p1: Primitive, p2: Primitive) -> Primitive {
-    println!("p1: {:?}", p1);
-    println!("p2: {:?}", p2);
     match p1 {
         Primitive::Int(p1_int) => match p2 {
             Primitive::Int(p2_int) => Primitive::Bool(p1_int == p2_int),
-            _ => Primitive::None
+            _ => Primitive::None,
         },
         Primitive::Str(p1_str) => match p2 {
             Primitive::Str(p2_str) => Primitive::Bool(p1_str == p2_str),
-            _ => Primitive::None
-        }
+            _ => Primitive::None,
+        },
         Primitive::Bool(p1_bool) => match p2 {
             Primitive::Bool(p2_bool) => Primitive::Bool(p1_bool == p2_bool),
-            _ => Primitive::None
-        }
+            _ => Primitive::None,
+        },
         _ => Primitive::None,
     }
 }
 
 fn neq_two_primitives(p1: Primitive, p2: Primitive) -> Primitive {
-    println!("p1: {:?}", p1);
-    println!("p2: {:?}", p2);
     match p1 {
         Primitive::Int(p1_int) => match p2 {
             Primitive::Int(p2_int) => Primitive::Bool(p1_int != p2_int),
-            _ => Primitive::None
+            _ => Primitive::None,
         },
         Primitive::Str(p1_str) => match p2 {
             Primitive::Str(p2_str) => Primitive::Bool(p1_str != p2_str),
-            _ => Primitive::None
-        }
+            _ => Primitive::None,
+        },
         Primitive::Bool(p1_bool) => match p2 {
             Primitive::Bool(p2_bool) => Primitive::Bool(p1_bool != p2_bool),
-            _ => Primitive::None
-        }
+            _ => Primitive::None,
+        },
         _ => Primitive::None,
     }
 }
 
 fn lt_two_primitives(p1: Primitive, p2: Primitive) -> Primitive {
-    println!("p1: {:?}", p1);
-    println!("p2: {:?}", p2);
     match p1 {
         Primitive::Int(p1_int) => match p2 {
             Primitive::Int(p2_int) => Primitive::Bool(p1_int < p2_int),
-            _ => Primitive::None
+            _ => Primitive::None,
         },
         _ => Primitive::None,
     }
 }
 
 fn gt_two_primitives(p1: Primitive, p2: Primitive) -> Primitive {
-    println!("p1: {:?}", p1);
-    println!("p2: {:?}", p2);
     match p1 {
         Primitive::Int(p1_int) => match p2 {
             Primitive::Int(p2_int) => Primitive::Bool(p1_int > p2_int),
-            _ => Primitive::None
+            _ => Primitive::None,
         },
         _ => Primitive::None,
     }
 }
 
 fn lte_two_primitives(p1: Primitive, p2: Primitive) -> Primitive {
-    println!("p1: {:?}", p1);
-    println!("p2: {:?}", p2);
     match p1 {
         Primitive::Int(p1_int) => match p2 {
             Primitive::Int(p2_int) => Primitive::Bool(p1_int <= p2_int),
-            _ => Primitive::None
+            _ => Primitive::None,
         },
         _ => Primitive::None,
     }
 }
 
 fn gte_two_primitives(p1: Primitive, p2: Primitive) -> Primitive {
-    println!("p1: {:?}", p1);
-    println!("p2: {:?}", p2);
     match p1 {
         Primitive::Int(p1_int) => match p2 {
             Primitive::Int(p2_int) => Primitive::Bool(p1_int >= p2_int),
-            _ => Primitive::None
+            _ => Primitive::None,
         },
         _ => Primitive::None,
     }
 }
 
 fn and_two_primitives(p1: Primitive, p2: Primitive) -> Primitive {
-    println!("p1: {:?}", p1);
-    println!("p2: {:?}", p2);
     match p1 {
         Primitive::Bool(p1_bool) => match p2 {
             Primitive::Bool(p2_bool) => Primitive::Bool(p1_bool && p2_bool),
-            _ => Primitive::None
+            _ => Primitive::None,
         },
         _ => Primitive::None,
     }
 }
 
 fn or_two_primitives(p1: Primitive, p2: Primitive) -> Primitive {
-    println!("p1: {:?}", p1);
-    println!("p2: {:?}", p2);
     match p1 {
         Primitive::Bool(p1_bool) => match p2 {
             Primitive::Bool(p2_bool) => Primitive::Bool(p1_bool || p2_bool),
-            _ => Primitive::None
+            _ => Primitive::None,
         },
         _ => Primitive::None,
     }
 }
-
