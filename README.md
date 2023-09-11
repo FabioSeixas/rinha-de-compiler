@@ -15,3 +15,4 @@ It's my first time with an interpreter and I am new to Rust, so take everything 
 - [ ] - Apply Tail Optimization
 - [ ] - Test more scenarios
 - [ ] - Print closures
+- [ ] - Support `Tuple`
