@@ -1,17 +1,18 @@
 use clap::Parser;
 use miette::IntoDiagnostic;
 use rinha::{ast, parser, Command};
-use std::{collections, fs};
+use std::{collections, fs, time::Instant};
 
 fn main() {
-    let command = Command::parse();
+    let command = dbg!(Command::parse());
     let file = fs::read_to_string(&command.main).into_diagnostic().unwrap();
     let ast: ast::File = serde_json::from_str(&file).unwrap();
-
+    let time = Instant::now();
     let mut interpreter = Interpreter::new();
 
     let mut global_scope = collections::HashMap::new();
     interpreter.interpret(ast.expression, &mut global_scope);
+    println!("{}", time.elapsed().as_secs_f32());
 }
 
 #[derive(Debug, Clone)]
@@ -21,6 +22,7 @@ enum Primitive {
     Bool(bool),
     Var((String, Box<Primitive>)),
     Function {
+        name: String,
         parameters: Vec<String>,
         value: ast::Term,
     },
@@ -29,11 +31,15 @@ enum Primitive {
 
 type Scope = collections::HashMap<String, Primitive>;
 
-struct Interpreter {}
+struct Interpreter {
+    memo: Scope,
+}
 
 impl Interpreter {
     fn new() -> Interpreter {
-        Interpreter { }
+        Interpreter {
+            memo: collections::HashMap::new(),
+        }
     }
     fn interpret(&mut self, ast: ast::Term, scope: &mut Scope) {
         self.visit(ast, scope);
@@ -74,8 +80,24 @@ impl Interpreter {
         }
     }
     fn visit_let(&mut self, let_param: ast::Let, scope: &mut Scope) -> Primitive {
-        let var_value = self.visit(*let_param.value, scope);
-        scope.insert(let_param.name.text, var_value);
+        let raw_var_value = self.visit(*let_param.value, scope);
+        match raw_var_value {
+            Primitive::Function {
+                name: _,
+                parameters,
+                value,
+            } => {
+                let function_value = Primitive::Function {
+                    parameters,
+                    value,
+                    name: let_param.name.text.clone(),
+                };
+                scope.insert(let_param.name.text, function_value);
+            }
+            other_primitive_value => {
+                scope.insert(let_param.name.text, other_primitive_value);
+            }
+        }
         self.visit(*let_param.next, scope)
     }
     fn visit_var(&mut self, var: parser::Var, scope: &Scope) -> Primitive {
@@ -92,28 +114,55 @@ impl Interpreter {
             parameters.push(param.text);
         }
         Primitive::Function {
+            name: String::from(""),
             value: *func.value,
             parameters,
         }
     }
     fn visit_call(&mut self, call: ast::Call, scope: &mut Scope) -> Primitive {
         let function = self.visit(*call.callee, scope);
-        if let Primitive::Function { parameters, value } = function {
+        if let Primitive::Function {
+            name,
+            parameters,
+            value,
+        } = function
+        {
+            let mut func_call_key = String::from(name);
             let mut local_scope: Scope = scope.clone();
             for (name, param_value) in parameters.into_iter().zip(call.arguments) {
                 let evaluated_param_value = self.visit(param_value, scope);
-                local_scope.insert(name, evaluated_param_value);
+                local_scope.insert(name.clone(), evaluated_param_value.clone());
+
+                match evaluated_param_value {
+                    Primitive::Str(value) => {
+                        func_call_key.push_str(&format!(",{}:{}", &name, value));
+                    }
+                    Primitive::Int(value) => {
+                        func_call_key.push_str(&format!(",{}:{}", &name, value));
+                    }
+                    Primitive::Bool(value) => {
+                        func_call_key.push_str(&format!(",{}:{}", &name, value));
+                    }
+                    _ => {}
+                }
             }
-            return self.visit(value, &mut local_scope);
+            let existing_memo_item = self.memo.get(&func_call_key);
+            if let Some(memoization) = existing_memo_item {
+                return memoization.clone();
+            } else {
+                let function_result = self.visit(value, &mut local_scope);
+                self.memo.insert(func_call_key, function_result.clone());
+                return function_result;
+            }
         }
         Primitive::None
     }
     fn visit_conditional(&mut self, conditional: ast::If, scope: &mut Scope) -> Primitive {
         if let Primitive::Bool(condition_result) = self.visit(*conditional.condition, scope) {
             if condition_result {
-                return self.visit(*conditional.then, scope)
+                return self.visit(*conditional.then, scope);
             } else {
-                return self.visit(*conditional.otherwise, scope)
+                return self.visit(*conditional.otherwise, scope);
             }
         }
         Primitive::None
@@ -148,9 +197,7 @@ fn add_two_primitives(p1: Primitive, p2: Primitive) -> Primitive {
                 result.push_str(&p2_str);
                 Primitive::Str(result)
             }
-            Primitive::Var(p2_var) => {
-                add_two_primitives(p1, *p2_var.1)
-            }
+            Primitive::Var(p2_var) => add_two_primitives(p1, *p2_var.1),
             _ => Primitive::None,
         },
         Primitive::Str(p1_str) => match p2 {

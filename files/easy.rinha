@@ -1,6 +1,3 @@
-let sumOne = fn (n) => {
-  n + 1
-};
+let b = fn (b) => 1 + b;
 
-let c = 10;
-print(sumOne(2) + sumOne(sumOne(2)) + c)
+print(b(10))
