@@ -201,7 +201,7 @@ impl Interpreter {
                 return self.visit(*conditional.otherwise, scope);
             }
         }
-        Primitive::None
+        panic!("The condition inside 'if' must evaluate to Bool")
     }
     fn visit_int(&self, int: ast::Int, scope: &Scope) -> Primitive {
         Primitive::Int(int.value)
@@ -297,7 +297,7 @@ fn add_two_primitives(p1: Primitive, p2: Primitive) -> Primitive {
                 Primitive::Str(result)
             }
             Primitive::Var(p2_var) => add_two_primitives(p1, *p2_var.1),
-            _ => Primitive::None,
+            _ => panic!("Int can only be sum with Int and Str"),
         },
         Primitive::Str(p1_str) => match p2 {
             Primitive::Int(p2_int) => {
@@ -310,9 +310,9 @@ fn add_two_primitives(p1: Primitive, p2: Primitive) -> Primitive {
                 result.push_str(&p2_str);
                 Primitive::Str(result)
             }
-            _ => Primitive::None,
+            _ => panic!("Str can only be sum with Int and Str"),
         },
-        _ => Primitive::None,
+        _ => panic!("Sum operation can only be done between Int and Str"),
     }
 }
 
@@ -320,9 +320,9 @@ fn sub_two_primitives(p1: Primitive, p2: Primitive) -> Primitive {
     match p1 {
         Primitive::Int(p1_int) => match p2 {
             Primitive::Int(p2_int) => Primitive::Int(p1_int - p2_int),
-            _ => Primitive::None,
+            _ => panic!("You can only subtract Int by another Int"),
         },
-        _ => Primitive::None,
+        _ => panic!("Subtract operation can only be done between two Int"),
     }
 }
 
@@ -330,9 +330,9 @@ fn mul_two_primitives(p1: Primitive, p2: Primitive) -> Primitive {
     match p1 {
         Primitive::Int(p1_int) => match p2 {
             Primitive::Int(p2_int) => Primitive::Int(p1_int * p2_int),
-            _ => Primitive::None,
+            _ => panic!("You can only multiply Int by another Int"),
         },
-        _ => Primitive::None,
+        _ => panic!("Multiplication operation can only be done between two Int"),
     }
 }
 
@@ -340,9 +340,9 @@ fn div_two_primitives(p1: Primitive, p2: Primitive) -> Primitive {
     match p1 {
         Primitive::Int(p1_int) => match p2 {
             Primitive::Int(p2_int) => Primitive::Int(p1_int / p2_int),
-            _ => Primitive::None,
+            _ => panic!("You can only divide Int by another Int"),
         },
-        _ => Primitive::None,
+        _ => panic!("Divide operation can only be done between two Int"),
     }
 }
 
@@ -350,9 +350,9 @@ fn rem_two_primitives(p1: Primitive, p2: Primitive) -> Primitive {
     match p1 {
         Primitive::Int(p1_int) => match p2 {
             Primitive::Int(p2_int) => Primitive::Int(p1_int % p2_int),
-            _ => Primitive::None,
+            _ => panic!("You can only remainder Int by another Int"),
         },
-        _ => Primitive::None,
+        _ => panic!("Remainder operation can only be done between two Int"),
     }
 }
 
@@ -360,17 +360,17 @@ fn eq_two_primitives(p1: Primitive, p2: Primitive) -> Primitive {
     match p1 {
         Primitive::Int(p1_int) => match p2 {
             Primitive::Int(p2_int) => Primitive::Bool(p1_int == p2_int),
-            _ => Primitive::None,
+            _ => panic!("You can only test equality of Int by another Int"),
         },
         Primitive::Str(p1_str) => match p2 {
             Primitive::Str(p2_str) => Primitive::Bool(p1_str == p2_str),
-            _ => Primitive::None,
+            _ => panic!("You can only test equality of Str by another Str"),
         },
         Primitive::Bool(p1_bool) => match p2 {
             Primitive::Bool(p2_bool) => Primitive::Bool(p1_bool == p2_bool),
-            _ => Primitive::None,
+            _ => panic!("You can only test equality of Bool by another Bool"),
         },
-        _ => Primitive::None,
+        _ => panic!("Equality operation can only be done between Int, Str and Bool"),
     }
 }
 
@@ -378,17 +378,17 @@ fn neq_two_primitives(p1: Primitive, p2: Primitive) -> Primitive {
     match p1 {
         Primitive::Int(p1_int) => match p2 {
             Primitive::Int(p2_int) => Primitive::Bool(p1_int != p2_int),
-            _ => Primitive::None,
+            _ => panic!("You can only test inequality of Int by another Int"),
         },
         Primitive::Str(p1_str) => match p2 {
             Primitive::Str(p2_str) => Primitive::Bool(p1_str != p2_str),
-            _ => Primitive::None,
+            _ => panic!("You can only test inequality of Str by another Str"),
         },
         Primitive::Bool(p1_bool) => match p2 {
             Primitive::Bool(p2_bool) => Primitive::Bool(p1_bool != p2_bool),
-            _ => Primitive::None,
+            _ => panic!("You can only test inequality of Bool by another Bool"),
         },
-        _ => Primitive::None,
+        _ => panic!("Inequality operation can only be done between Int, Str and Bool"),
     }
 }
 
@@ -396,9 +396,9 @@ fn lt_two_primitives(p1: Primitive, p2: Primitive) -> Primitive {
     match p1 {
         Primitive::Int(p1_int) => match p2 {
             Primitive::Int(p2_int) => Primitive::Bool(p1_int < p2_int),
-            _ => Primitive::None,
+            _ => panic!("You can only test 'lower than' of Int by another Int"),
         },
-        _ => Primitive::None,
+        _ => panic!("'Lower than' test operator can only be done with Int"),
     }
 }
 
@@ -406,9 +406,9 @@ fn gt_two_primitives(p1: Primitive, p2: Primitive) -> Primitive {
     match p1 {
         Primitive::Int(p1_int) => match p2 {
             Primitive::Int(p2_int) => Primitive::Bool(p1_int > p2_int),
-            _ => Primitive::None,
+            _ => panic!("You can only test 'greater than' of Int by another Int"),
         },
-        _ => Primitive::None,
+        _ => panic!("'Greater than' test operator can only be done with Int"),
     }
 }
 
@@ -416,9 +416,9 @@ fn lte_two_primitives(p1: Primitive, p2: Primitive) -> Primitive {
     match p1 {
         Primitive::Int(p1_int) => match p2 {
             Primitive::Int(p2_int) => Primitive::Bool(p1_int <= p2_int),
-            _ => Primitive::None,
+            _ => panic!("You can only test 'lower than or equal' of Int by another Int"),
         },
-        _ => Primitive::None,
+        _ => panic!("'Lower than or equal' test operator can only be done with Int"),
     }
 }
 
@@ -426,9 +426,9 @@ fn gte_two_primitives(p1: Primitive, p2: Primitive) -> Primitive {
     match p1 {
         Primitive::Int(p1_int) => match p2 {
             Primitive::Int(p2_int) => Primitive::Bool(p1_int >= p2_int),
-            _ => Primitive::None,
+            _ => panic!("You can only test 'greater than or equal' of Int by another Int"),
         },
-        _ => Primitive::None,
+        _ => panic!("'Greater than or equal' test operator can only be done with Int"),
     }
 }
 
@@ -436,9 +436,9 @@ fn and_two_primitives(p1: Primitive, p2: Primitive) -> Primitive {
     match p1 {
         Primitive::Bool(p1_bool) => match p2 {
             Primitive::Bool(p2_bool) => Primitive::Bool(p1_bool && p2_bool),
-            _ => Primitive::None,
+            _ => panic!("You can only use 'and' operator between Bool"),
         },
-        _ => Primitive::None,
+        _ => panic!("You can only use 'and' operator between Bool"),
     }
 }
 
@@ -446,8 +446,8 @@ fn or_two_primitives(p1: Primitive, p2: Primitive) -> Primitive {
     match p1 {
         Primitive::Bool(p1_bool) => match p2 {
             Primitive::Bool(p2_bool) => Primitive::Bool(p1_bool || p2_bool),
-            _ => Primitive::None,
+            _ => panic!("You can only use 'or' operator between Bool"),
         },
-        _ => Primitive::None,
+        _ => panic!("You can only use 'or' operator between Bool"),
     }
 }
