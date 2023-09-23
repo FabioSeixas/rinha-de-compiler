@@ -6,7 +6,14 @@ Although the challenge's name includes 'compilers', the organizers made their ow
 
 It's my first time with an interpreter and I am new to Rust, so take everything here with a piece of salt.
 
-## TODO
+## To run
+```
+docker build . -t interpreter
+
+docker run --rm --name interp-container intepreter <path to AST>
+```
+
+## TODO or ideas to improve
 
 - [ ] - Use command line to turn on/off memoization (clap crate)
 - [ ] - Fix memoization (`fib(50)` is returning a negative number 😅) -> `result > 2^(32-1)`. The fix is `Panic`.
@@ -14,5 +21,5 @@ It's my first time with an interpreter and I am new to Rust, so take everything 
 - [ ] - Memoize binary operations
 - [ ] - Apply Tail Optimization
 - [ ] - Test more scenarios
-- [ ] - Print closures
-- [ ] - Support `Tuple`
+- [X] - Print closures
+- [X] - Support `Tuple`

@@ -59,6 +59,8 @@ impl Interpreter {
             ast::Term::Call(v) => self.visit_call(v, scope),
             ast::Term::If(v) => self.visit_conditional(v, scope),
             ast::Term::Tuple(v) => self.visit_tuple(v, scope),
+            ast::Term::First(v) => self.visit_first(v, scope),
+            ast::Term::Second(v) => self.visit_second(v, scope),
             _ => Primitive::None,
         }
     }
@@ -143,15 +145,28 @@ impl Interpreter {
         } = function
         {
             // println!("{:?}", outside_scope_var_names);
-            let mut func_call_key = String::from(name);
+
+            if call.arguments.len() != parameters.len() {
+                panic!(
+                    "Function \"{}\" expect \"{}\" parameters.",
+                    name,
+                    parameters.len()
+                )
+            }
+
+            let mut func_call_key = String::from(&name);
+
             let mut local_scope: Scope = collections::HashMap::new();
 
-            local_scope.insert(func_call_key.clone(), Primitive::Function {
-                value: value.clone(),
-                outside_scope_var_names: outside_scope_var_names.clone(),
-                name: func_call_key.clone(),
-                parameters: parameters.clone()
-            });
+            local_scope.insert(
+                func_call_key.clone(),
+                Primitive::Function {
+                    value: value.clone(),
+                    outside_scope_var_names: outside_scope_var_names.clone(),
+                    name: func_call_key.clone(),
+                    parameters: parameters.clone(),
+                },
+            );
 
             for var_name in outside_scope_var_names {
                 match scope.get(&var_name) {
@@ -161,6 +176,7 @@ impl Interpreter {
                     None => {}
                 }
             }
+
             for (name, param_value) in parameters.into_iter().zip(call.arguments) {
                 let evaluated_param_value = self.visit(param_value, scope);
                 local_scope.insert(name.clone(), evaluated_param_value.clone());
@@ -213,26 +229,42 @@ impl Interpreter {
         let second = self.visit(*tuple.second, scope);
         Primitive::Tuple([Box::new(first), Box::new(second)])
     }
+    fn visit_first(&mut self, first: ast::First, scope: &mut Scope) -> Primitive {
+        match *first.value {
+            ast::Term::Tuple(v) => self.visit(*v.first, scope),
+            _ => {
+                panic!("\"First\" keyword must be used on Tuples")
+            }
+        }
+    }
+    fn visit_second(&mut self, second: ast::Second, scope: &mut Scope) -> Primitive {
+        match *second.value {
+            ast::Term::Tuple(v) => self.visit(*v.second, scope),
+            _ => {
+                panic!("\"First\" keyword must be used on Tuples")
+            }
+        }
+    }
     fn visit_print(&mut self, print: ast::Print, scope: &mut Scope) -> Primitive {
         let result = self.visit(*print.value, scope);
-        match result {
-            Primitive::Str(v) => println!("{v}"),
-            Primitive::Int(v) => println!("{v}"),
-            Primitive::Bool(v) => println!("{v}"),
+        match &result {
+            Primitive::Str(v) => print!("{v}\n"),
+            Primitive::Int(v) => print!("{v}\n"),
+            Primitive::Bool(v) => print!("{v}\n"),
             Primitive::Function {
                 name,
                 parameters,
                 value,
                 outside_scope_var_names,
-            } => println!("<#closure>"),
+            } => print!("<#closure>\n"),
             Primitive::Tuple(original_tuple) => {
-                let print_tuple = get_tuple_string(original_tuple);
+                let print_tuple = get_tuple_string(original_tuple.clone());
 
-                println!("{print_tuple}")
+                print!("{print_tuple}\n")
             }
             _ => {}
         }
-        Primitive::None
+        result
     }
 }
 

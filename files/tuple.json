@@ -1,515 +1,59 @@
 {
   "name": "files/tuple.rinha",
   "expression": {
-    "kind": "Let",
-    "name": {
-      "text": "c",
-      "location": {
-        "start": 4,
-        "end": 5,
-        "filename": "files/tuple.rinha"
-      }
-    },
+    "kind": "Print",
     "value": {
-      "kind": "Int",
-      "value": 10,
-      "location": {
-        "start": 8,
-        "end": 10,
-        "filename": "files/tuple.rinha"
-      }
-    },
-    "next": {
-      "kind": "Let",
-      "name": {
-        "text": "sumTen",
+      "kind": "Binary",
+      "lhs": {
+        "kind": "Print",
+        "value": {
+          "kind": "Int",
+          "value": 1,
+          "location": {
+            "start": 12,
+            "end": 13,
+            "filename": "files/tuple.rinha"
+          }
+        },
         "location": {
-          "start": 16,
-          "end": 22,
+          "start": 6,
+          "end": 14,
           "filename": "files/tuple.rinha"
         }
       },
-      "value": {
-        "kind": "Function",
-        "parameters": [
-          {
-            "text": "n",
-            "location": {
-              "start": 29,
-              "end": 30,
-              "filename": "files/tuple.rinha"
-            }
-          }
-        ],
+      "op": "Add",
+      "rhs": {
+        "kind": "Print",
         "value": {
-          "kind": "Binary",
-          "lhs": {
-            "kind": "Var",
-            "text": "n",
-            "location": {
-              "start": 39,
-              "end": 40,
-              "filename": "files/tuple.rinha"
-            }
-          },
-          "op": "Add",
-          "rhs": {
-            "kind": "Var",
-            "text": "c",
-            "location": {
-              "start": 43,
-              "end": 44,
-              "filename": "files/tuple.rinha"
-            }
-          },
+          "kind": "Int",
+          "value": 2,
           "location": {
-            "start": 39,
-            "end": 44,
+            "start": 23,
+            "end": 24,
             "filename": "files/tuple.rinha"
           }
         },
         "location": {
-          "start": 25,
-          "end": 46,
-          "filename": "files/tuple.rinha"
-        }
-      },
-      "next": {
-        "kind": "Let",
-        "name": {
-          "text": "getStr",
-          "location": {
-            "start": 53,
-            "end": 59,
-            "filename": "files/tuple.rinha"
-          }
-        },
-        "value": {
-          "kind": "Function",
-          "parameters": [
-            {
-              "text": "str",
-              "location": {
-                "start": 66,
-                "end": 69,
-                "filename": "files/tuple.rinha"
-              }
-            }
-          ],
-          "value": {
-            "kind": "Binary",
-            "lhs": {
-              "kind": "Var",
-              "text": "str",
-              "location": {
-                "start": 78,
-                "end": 81,
-                "filename": "files/tuple.rinha"
-              }
-            },
-            "op": "Add",
-            "rhs": {
-              "kind": "Str",
-              "value": " with super powers",
-              "location": {
-                "start": 84,
-                "end": 104,
-                "filename": "files/tuple.rinha"
-              }
-            },
-            "location": {
-              "start": 78,
-              "end": 104,
-              "filename": "files/tuple.rinha"
-            }
-          },
-          "location": {
-            "start": 62,
-            "end": 106,
-            "filename": "files/tuple.rinha"
-          }
-        },
-        "next": {
-          "kind": "Let",
-          "name": {
-            "text": "fib",
-            "location": {
-              "start": 113,
-              "end": 116,
-              "filename": "files/tuple.rinha"
-            }
-          },
-          "value": {
-            "kind": "Function",
-            "parameters": [
-              {
-                "text": "n",
-                "location": {
-                  "start": 123,
-                  "end": 124,
-                  "filename": "files/tuple.rinha"
-                }
-              }
-            ],
-            "value": {
-              "kind": "If",
-              "condition": {
-                "kind": "Binary",
-                "lhs": {
-                  "kind": "Var",
-                  "text": "n",
-                  "location": {
-                    "start": 137,
-                    "end": 138,
-                    "filename": "files/tuple.rinha"
-                  }
-                },
-                "op": "Lt",
-                "rhs": {
-                  "kind": "Int",
-                  "value": 2,
-                  "location": {
-                    "start": 141,
-                    "end": 142,
-                    "filename": "files/tuple.rinha"
-                  }
-                },
-                "location": {
-                  "start": 137,
-                  "end": 142,
-                  "filename": "files/tuple.rinha"
-                }
-              },
-              "then": {
-                "kind": "Var",
-                "text": "n",
-                "location": {
-                  "start": 150,
-                  "end": 151,
-                  "filename": "files/tuple.rinha"
-                }
-              },
-              "otherwise": {
-                "kind": "Binary",
-                "lhs": {
-                  "kind": "Call",
-                  "callee": {
-                    "kind": "Var",
-                    "text": "fib",
-                    "location": {
-                      "start": 167,
-                      "end": 170,
-                      "filename": "files/tuple.rinha"
-                    }
-                  },
-                  "arguments": [
-                    {
-                      "kind": "Binary",
-                      "lhs": {
-                        "kind": "Var",
-                        "text": "n",
-                        "location": {
-                          "start": 171,
-                          "end": 172,
-                          "filename": "files/tuple.rinha"
-                        }
-                      },
-                      "op": "Sub",
-                      "rhs": {
-                        "kind": "Int",
-                        "value": 1,
-                        "location": {
-                          "start": 175,
-                          "end": 176,
-                          "filename": "files/tuple.rinha"
-                        }
-                      },
-                      "location": {
-                        "start": 171,
-                        "end": 176,
-                        "filename": "files/tuple.rinha"
-                      }
-                    }
-                  ],
-                  "location": {
-                    "start": 167,
-                    "end": 177,
-                    "filename": "files/tuple.rinha"
-                  }
-                },
-                "op": "Add",
-                "rhs": {
-                  "kind": "Call",
-                  "callee": {
-                    "kind": "Var",
-                    "text": "fib",
-                    "location": {
-                      "start": 180,
-                      "end": 183,
-                      "filename": "files/tuple.rinha"
-                    }
-                  },
-                  "arguments": [
-                    {
-                      "kind": "Binary",
-                      "lhs": {
-                        "kind": "Var",
-                        "text": "n",
-                        "location": {
-                          "start": 184,
-                          "end": 185,
-                          "filename": "files/tuple.rinha"
-                        }
-                      },
-                      "op": "Sub",
-                      "rhs": {
-                        "kind": "Int",
-                        "value": 2,
-                        "location": {
-                          "start": 188,
-                          "end": 189,
-                          "filename": "files/tuple.rinha"
-                        }
-                      },
-                      "location": {
-                        "start": 184,
-                        "end": 189,
-                        "filename": "files/tuple.rinha"
-                      }
-                    }
-                  ],
-                  "location": {
-                    "start": 180,
-                    "end": 190,
-                    "filename": "files/tuple.rinha"
-                  }
-                },
-                "location": {
-                  "start": 167,
-                  "end": 190,
-                  "filename": "files/tuple.rinha"
-                }
-              },
-              "location": {
-                "start": 133,
-                "end": 194,
-                "filename": "files/tuple.rinha"
-              }
-            },
-            "location": {
-              "start": 119,
-              "end": 196,
-              "filename": "files/tuple.rinha"
-            }
-          },
-          "next": {
-            "kind": "Print",
-            "value": {
-              "kind": "Tuple",
-              "first": {
-                "kind": "Tuple",
-                "first": {
-                  "kind": "Call",
-                  "callee": {
-                    "kind": "Var",
-                    "text": "fib",
-                    "location": {
-                      "start": 207,
-                      "end": 210,
-                      "filename": "files/tuple.rinha"
-                    }
-                  },
-                  "arguments": [
-                    {
-                      "kind": "Str",
-                      "value": "bob",
-                      "location": {
-                        "start": 211,
-                        "end": 216,
-                        "filename": "files/tuple.rinha"
-                      }
-                    }
-                  ],
-                  "location": {
-                    "start": 207,
-                    "end": 217,
-                    "filename": "files/tuple.rinha"
-                  }
-                },
-                "second": {
-                  "kind": "Call",
-                  "callee": {
-                    "kind": "Var",
-                    "text": "getStr",
-                    "location": {
-                      "start": 219,
-                      "end": 225,
-                      "filename": "files/tuple.rinha"
-                    }
-                  },
-                  "arguments": [
-                    {
-                      "kind": "Str",
-                      "value": "my cat",
-                      "location": {
-                        "start": 226,
-                        "end": 234,
-                        "filename": "files/tuple.rinha"
-                      }
-                    }
-                  ],
-                  "location": {
-                    "start": 219,
-                    "end": 235,
-                    "filename": "files/tuple.rinha"
-                  }
-                },
-                "location": {
-                  "start": 206,
-                  "end": 236,
-                  "filename": "files/tuple.rinha"
-                }
-              },
-              "second": {
-                "kind": "Tuple",
-                "first": {
-                  "kind": "Call",
-                  "callee": {
-                    "kind": "Var",
-                    "text": "sumTen",
-                    "location": {
-                      "start": 239,
-                      "end": 245,
-                      "filename": "files/tuple.rinha"
-                    }
-                  },
-                  "arguments": [
-                    {
-                      "kind": "Int",
-                      "value": 20,
-                      "location": {
-                        "start": 246,
-                        "end": 248,
-                        "filename": "files/tuple.rinha"
-                      }
-                    }
-                  ],
-                  "location": {
-                    "start": 239,
-                    "end": 249,
-                    "filename": "files/tuple.rinha"
-                  }
-                },
-                "second": {
-                  "kind": "Binary",
-                  "lhs": {
-                    "kind": "Var",
-                    "text": "c",
-                    "location": {
-                      "start": 251,
-                      "end": 252,
-                      "filename": "files/tuple.rinha"
-                    }
-                  },
-                  "op": "Add",
-                  "rhs": {
-                    "kind": "Call",
-                    "callee": {
-                      "kind": "Var",
-                      "text": "sumTen",
-                      "location": {
-                        "start": 255,
-                        "end": 261,
-                        "filename": "files/tuple.rinha"
-                      }
-                    },
-                    "arguments": [
-                      {
-                        "kind": "Call",
-                        "callee": {
-                          "kind": "Var",
-                          "text": "fib",
-                          "location": {
-                            "start": 262,
-                            "end": 265,
-                            "filename": "files/tuple.rinha"
-                          }
-                        },
-                        "arguments": [
-                          {
-                            "kind": "Int",
-                            "value": 25,
-                            "location": {
-                              "start": 266,
-                              "end": 268,
-                              "filename": "files/tuple.rinha"
-                            }
-                          }
-                        ],
-                        "location": {
-                          "start": 262,
-                          "end": 269,
-                          "filename": "files/tuple.rinha"
-                        }
-                      }
-                    ],
-                    "location": {
-                      "start": 255,
-                      "end": 270,
-                      "filename": "files/tuple.rinha"
-                    }
-                  },
-                  "location": {
-                    "start": 251,
-                    "end": 270,
-                    "filename": "files/tuple.rinha"
-                  }
-                },
-                "location": {
-                  "start": 238,
-                  "end": 271,
-                  "filename": "files/tuple.rinha"
-                }
-              },
-              "location": {
-                "start": 205,
-                "end": 272,
-                "filename": "files/tuple.rinha"
-              }
-            },
-            "location": {
-              "start": 199,
-              "end": 273,
-              "filename": "files/tuple.rinha"
-            }
-          },
-          "location": {
-            "start": 109,
-            "end": 273,
-            "filename": "files/tuple.rinha"
-          }
-        },
-        "location": {
-          "start": 49,
-          "end": 273,
+          "start": 17,
+          "end": 25,
           "filename": "files/tuple.rinha"
         }
       },
       "location": {
-        "start": 12,
-        "end": 273,
+        "start": 6,
+        "end": 25,
         "filename": "files/tuple.rinha"
       }
     },
     "location": {
       "start": 0,
-      "end": 273,
+      "end": 26,
       "filename": "files/tuple.rinha"
     }
   },
   "location": {
     "start": 0,
-    "end": 273,
+    "end": 26,
     "filename": "files/tuple.rinha"
   }
 }
