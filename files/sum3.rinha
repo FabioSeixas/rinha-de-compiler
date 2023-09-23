@@ -1,0 +1,8 @@
+let sumFive = fn (n) => {
+  let c = 5;
+  n + c
+};
+
+let c = 3;
+
+print(sumFive(2))

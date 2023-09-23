@@ -6,4 +6,4 @@ let fib = fn (n) => {
   }
 };
 
-print (fib(40))
+print("fib(46) = " + fib(46))

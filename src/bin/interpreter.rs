@@ -4,7 +4,7 @@ use rinha::{ast, parser, Command};
 use std::{collections, fs, time::Instant};
 
 fn main() {
-    let command = dbg!(Command::parse());
+    let command = Command::parse();
     let file = fs::read_to_string(&command.main).into_diagnostic().unwrap();
     let ast: ast::File = serde_json::from_str(&file).unwrap();
     let time = Instant::now();
@@ -12,7 +12,7 @@ fn main() {
 
     let mut global_scope = collections::HashMap::new();
     interpreter.interpret(ast.expression, &mut global_scope);
-    println!("{}", time.elapsed().as_secs_f32());
+    // println!("{}", time.elapsed().as_secs_f32());
 }
 
 #[derive(Debug, Clone)]
@@ -25,7 +25,9 @@ enum Primitive {
         name: String,
         parameters: Vec<String>,
         value: ast::Term,
+        outside_scope_var_names: Vec<String>,
     },
+    Tuple([Box<Primitive>; 2]),
     None,
 }
 
@@ -56,6 +58,7 @@ impl Interpreter {
             ast::Term::Function(v) => self.visit_function(v, scope),
             ast::Term::Call(v) => self.visit_call(v, scope),
             ast::Term::If(v) => self.visit_conditional(v, scope),
+            ast::Term::Tuple(v) => self.visit_tuple(v, scope),
             _ => Primitive::None,
         }
     }
@@ -76,7 +79,6 @@ impl Interpreter {
             ast::BinaryOp::Gte => gte_two_primitives(left, right),
             ast::BinaryOp::And => and_two_primitives(left, right),
             ast::BinaryOp::Or => or_two_primitives(left, right),
-            _ => Primitive::None,
         }
     }
     fn visit_let(&mut self, let_param: ast::Let, scope: &mut Scope) -> Primitive {
@@ -86,10 +88,13 @@ impl Interpreter {
                 name: _,
                 parameters,
                 value,
+                outside_scope_var_names,
             } => {
+                let current_vars_in_scope: Vec<String> = scope.keys().cloned().collect();
                 let function_value = Primitive::Function {
                     parameters,
                     value,
+                    outside_scope_var_names: current_vars_in_scope,
                     name: let_param.name.text.clone(),
                 };
                 scope.insert(let_param.name.text, function_value);
@@ -101,21 +106,30 @@ impl Interpreter {
         self.visit(*let_param.next, scope)
     }
     fn visit_var(&mut self, var: parser::Var, scope: &Scope) -> Primitive {
+        // println!("visit var: {:?}", var);
         let var_stored_opt = scope.get(&var.text);
         if let Some(var_stored) = var_stored_opt {
             var_stored.clone()
         } else {
-            Primitive::None
+            panic!(
+                "{}",
+                format!("Variable \"{}\" not found in the scope", &var.text)
+            );
         }
     }
     fn visit_function(&mut self, func: ast::Function, scope: &Scope) -> Primitive {
+        // println!("visit function: {:?}", func);
         let mut parameters: Vec<String> = Vec::new();
         for param in func.parameters {
             parameters.push(param.text);
         }
+
+        let func_value = *func.value;
+
         Primitive::Function {
             name: String::from(""),
-            value: *func.value,
+            value: func_value,
+            outside_scope_var_names: vec![],
             parameters,
         }
     }
@@ -125,10 +139,28 @@ impl Interpreter {
             name,
             parameters,
             value,
+            outside_scope_var_names,
         } = function
         {
+            // println!("{:?}", outside_scope_var_names);
             let mut func_call_key = String::from(name);
-            let mut local_scope: Scope = scope.clone();
+            let mut local_scope: Scope = collections::HashMap::new();
+
+            local_scope.insert(func_call_key.clone(), Primitive::Function {
+                value: value.clone(),
+                outside_scope_var_names: outside_scope_var_names.clone(),
+                name: func_call_key.clone(),
+                parameters: parameters.clone()
+            });
+
+            for var_name in outside_scope_var_names {
+                match scope.get(&var_name) {
+                    Some(value) => {
+                        local_scope.insert(var_name, value.clone());
+                    }
+                    None => {}
+                }
+            }
             for (name, param_value) in parameters.into_iter().zip(call.arguments) {
                 let evaluated_param_value = self.visit(param_value, scope);
                 local_scope.insert(name.clone(), evaluated_param_value.clone());
@@ -176,16 +208,63 @@ impl Interpreter {
     fn visit_str(&self, str: ast::Str, scope: &Scope) -> Primitive {
         Primitive::Str(str.value)
     }
+    fn visit_tuple(&mut self, tuple: ast::Tuple, scope: &mut Scope) -> Primitive {
+        let first = self.visit(*tuple.first, scope);
+        let second = self.visit(*tuple.second, scope);
+        Primitive::Tuple([Box::new(first), Box::new(second)])
+    }
     fn visit_print(&mut self, print: ast::Print, scope: &mut Scope) -> Primitive {
         let result = self.visit(*print.value, scope);
         match result {
             Primitive::Str(v) => println!("{v}"),
             Primitive::Int(v) => println!("{v}"),
             Primitive::Bool(v) => println!("{v}"),
+            Primitive::Function {
+                name,
+                parameters,
+                value,
+                outside_scope_var_names,
+            } => println!("<#closure>"),
+            Primitive::Tuple(original_tuple) => {
+                let print_tuple = get_tuple_string(original_tuple);
+
+                println!("{print_tuple}")
+            }
             _ => {}
         }
         Primitive::None
     }
+}
+
+fn get_tuple_string(original_tuple: [Box<Primitive>; 2]) -> String {
+    let mut print_tuple = String::from("(");
+
+    for (index, value) in original_tuple.into_iter().enumerate() {
+        match *value {
+            Primitive::Str(v) => print_tuple.push_str(&v),
+            Primitive::Int(v) => print_tuple.push_str(&v.to_string()),
+            Primitive::Bool(v) => print_tuple.push_str(&v.to_string()),
+            Primitive::Function {
+                name,
+                parameters,
+                value,
+                outside_scope_var_names,
+            } => print_tuple.push_str("<#closure>"),
+            Primitive::Tuple(v) => {
+                let inner_print_tuple = get_tuple_string(v);
+                print_tuple.push_str(&inner_print_tuple);
+            }
+            _ => {}
+        }
+
+        if index < 1 {
+            print_tuple.push_str(", ");
+        }
+    }
+
+    print_tuple.push(')');
+
+    print_tuple
 }
 
 fn add_two_primitives(p1: Primitive, p2: Primitive) -> Primitive {

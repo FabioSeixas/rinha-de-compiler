@@ -176,48 +176,66 @@
     "next": {
       "kind": "Print",
       "value": {
-        "kind": "Call",
-        "callee": {
-          "kind": "Var",
-          "text": "fib",
+        "kind": "Binary",
+        "lhs": {
+          "kind": "Str",
+          "value": "fib(46) = ",
           "location": {
-            "start": 97,
-            "end": 100,
+            "start": 96,
+            "end": 108,
             "filename": "files/fib.rinha"
           }
         },
-        "arguments": [
-          {
-            "kind": "Int",
-            "value": 50,
+        "op": "Add",
+        "rhs": {
+          "kind": "Call",
+          "callee": {
+            "kind": "Var",
+            "text": "fib",
             "location": {
-              "start": 101,
-              "end": 103,
+              "start": 111,
+              "end": 114,
               "filename": "files/fib.rinha"
             }
+          },
+          "arguments": [
+            {
+              "kind": "Int",
+              "value": 46,
+              "location": {
+                "start": 115,
+                "end": 117,
+                "filename": "files/fib.rinha"
+              }
+            }
+          ],
+          "location": {
+            "start": 111,
+            "end": 118,
+            "filename": "files/fib.rinha"
           }
-        ],
+        },
         "location": {
-          "start": 97,
-          "end": 104,
+          "start": 96,
+          "end": 118,
           "filename": "files/fib.rinha"
         }
       },
       "location": {
         "start": 90,
-        "end": 105,
+        "end": 119,
         "filename": "files/fib.rinha"
       }
     },
     "location": {
       "start": 0,
-      "end": 105,
+      "end": 119,
       "filename": "files/fib.rinha"
     }
   },
   "location": {
     "start": 0,
-    "end": 105,
+    "end": 119,
     "filename": "files/fib.rinha"
   }
 }

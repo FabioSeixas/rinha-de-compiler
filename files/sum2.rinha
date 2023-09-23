@@ -1,0 +1,7 @@
+let b = 3;
+
+let sum = fn (c) => {
+  c + b
+};
+
+print(sum(1))
