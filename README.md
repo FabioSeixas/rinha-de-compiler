@@ -16,7 +16,6 @@ docker run --rm --name interp-container intepreter <path to AST>
 ## TODO or ideas to improve
 
 - [ ] - Use command line to turn on/off memoization (clap crate)
-- [ ] - Fix memoization (`fib(50)` is returning a negative number 😅) -> `result > 2^(32-1)`. The fix is `Panic`.
 - [ ] - Memoize only pure functions
 - [ ] - Memoize binary operations
 - [ ] - Apply Tail Optimization
