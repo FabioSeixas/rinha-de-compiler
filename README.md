@@ -6,12 +6,18 @@ Although the challenge's name includes 'compilers', the organizers made their ow
 
 It's my first time with an interpreter and I am new to Rust, so take everything here with a piece of salt.
 
-## To run
-```
-docker build . -t interpreter
+## Build
 
-docker run --rm --name interp-container intepreter <path to AST>
 ```
+docker build -t interpreter .
+```
+
+Leave the ASTs in your local `/files` path and run the interpreter:
+
+```
+docker run --rm -v ./files:/usr/src/rinha/files intepreter <path to AST>
+```
+
 
 ## TODO or ideas to improve
 
