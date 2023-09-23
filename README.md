@@ -12,6 +12,7 @@ It's my first time with an interpreter and I am new to Rust, so take everything 
 docker build -t interpreter .
 ```
 
+## Run
 Leave the ASTs in your local `/files` path and run the interpreter:
 
 ```
