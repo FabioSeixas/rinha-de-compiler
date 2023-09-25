@@ -13,10 +13,11 @@ docker build -t interpreter .
 ```
 
 ## Run
-Leave the ASTs in your local `/files` path and run the interpreter:
+
+Map a file named `source.rinha.json` to the container:
 
 ```
-docker run --rm -v ./files:/usr/src/rinha/files intepreter <path to AST>
+docker run --rm -v ./source.rinha.json:/var/rinha/source.rinha.json interpreter
 ```
 
 
